@@ -13,7 +13,7 @@ import {
 import { Alert, AlertDescription } from "../src/components/ui/alert";
 import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import {useAuth} from "../src/context/AuthContext"
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +21,7 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
  const navigate = useNavigate();
+ const { login } = useAuth();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -41,8 +42,9 @@ export default function LoginForm() {
       if (!data.status) {
         setError(data.message || "Invalid credentials");
       } else {
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("userId", data.id);
+        // ✅ Save with context instead of directly writing to localStorage
+        login({ token: data.token, id: data.id });
+    
         console.log("Login successful:", data);
         navigate("/admin/dashboard");
       }
@@ -164,3 +166,7 @@ export default function LoginForm() {
     </div>
   );
 }
+function login(arg0: { token: any; id: any; }) {
+  throw new Error("Function not implemented.");
+}
+

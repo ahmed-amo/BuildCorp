@@ -6,6 +6,7 @@ import Contact from "../pages/contact";
 import Login from "../pages/login";
 import "./assets/global.css";
 import Dashboard from "../pages/Admin/dashboard";
+import RequireAuth from "../src/context/RequireAuth";
 
 function App() {
   return (
@@ -17,7 +18,9 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />}/>
           <Route path="/login" element={<Login />} />
-          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route element={<RequireAuth />}>
+            <Route path="/admin/dashboard" element={<Dashboard />} />
+          </Route>
         </Routes>
       </AppLayout>
     </BrowserRouter>
