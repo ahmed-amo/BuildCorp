@@ -3,7 +3,9 @@ import AppLayout from "../layouts/AppLayout"
 import Home from "../pages/home";
 import About from "../pages/about";
 import Contact from "../pages/contact";
-import "./assets/global.css"
+import Login from "../pages/login";
+import "./assets/global.css";
+import Dashboard from "../pages/Admin/dashboard";
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
           <Route path="/home"element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />}/>
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>
