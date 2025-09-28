@@ -1,4 +1,4 @@
-// src/context/AuthContext.tsx (or .jsx if not using TS)
+// src/context/AuthContext.tsx
 import { createContext, useContext, useState, useEffect } from "react";
 
 interface User {
@@ -9,7 +9,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (userData: User) => void;
-  logout: () => void;
+  logout: () => Promise<void>; // now async
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -31,10 +31,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userId");
-    setUser(null);
+  const logout = async () => {
+    try {
+      if (user?.token) {
+        await fetch("http://127.0.0.1:8000/api/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`, // send token to backend
+          },
+        });
+      }
+    } catch (err) {
+      console.error("Logout API failed", err);
+      // even if API fails, still clear local storage
+    } finally {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userId");
+      setUser(null);
+    }
   };
 
   return (
