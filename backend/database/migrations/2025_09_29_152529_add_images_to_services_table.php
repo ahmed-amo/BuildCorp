@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('images', function (Blueprint $table){
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
+
+            Schema::table('services', function (Blueprint $table) {
+        $table->string('image_small')->nullable();
+        $table->string('image_large')->nullable();
+    });
+
     }
 
     /**
@@ -23,6 +24,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::table('services', function (Blueprint $table) {
+            //
+        });
     }
 };
