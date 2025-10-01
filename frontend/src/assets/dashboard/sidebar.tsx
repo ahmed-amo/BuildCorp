@@ -5,6 +5,9 @@ import { Link, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, Settings, FolderOpen, LogOut, Menu, X } from "lucide-react"
+import { useAuth } from "../../../src/context/AuthContext"
+
+
 
 interface SidebarProps {
   className?: string
@@ -13,6 +16,7 @@ interface SidebarProps {
 export default  function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const location = useLocation()
+  const { logout } = useAuth()
 
   const navigationItems = [
     {
@@ -80,6 +84,7 @@ export default  function Sidebar({ className }: SidebarProps) {
       {/* Logout Button */}
       <div className="p-4 border-t border-sidebar-border">
         <Button
+        onClick={logout}
           variant="ghost"
           className={cn(
             "w-full justify-start gap-3 text-sidebar-foreground hover:bg-destructive hover:text-destructive-foreground",
