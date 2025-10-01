@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Bell, Search, User } from "lucide-react"
 
-export function DashboardHeader() {
+export default function Header() {
   return (
     <header className="flex items-center justify-between p-6 bg-card border-b border-border">
       <div className="flex items-center gap-4">

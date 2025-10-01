@@ -1,9 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Intervention\Image\Facades\Image;
+use App\Http\Controllers\ServiceController;
 
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/services', [ServiceController::class, 'index']);

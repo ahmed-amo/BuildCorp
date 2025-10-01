@@ -7,8 +7,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TempImageController;
 
+//authenification
 Route::post('authenticate' ,[AuthentificationController::class,'authenticate']);
 Route::get('authenticate' ,[AuthentificationController::class,'authenticate']);
+
+//showing services
+
+Route::get('/services', [ServiceController::class, 'index']);
+
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
@@ -21,7 +28,6 @@ Route::group(['middleware'=> ['auth:sanctum']],function(){
 
     //ServicesAPI
     Route::post('/services', [ServiceController::class, 'store']);
-    Route::get('/services', [ServiceController::class, 'index']);
     Route::put('/services/{id}', [ServiceController::class, 'update']);
     Route::get('/services/{id}', [ServiceController::class, 'show']);
     Route::delete('/services/{id}', [ServiceController::class, 'destroy']);

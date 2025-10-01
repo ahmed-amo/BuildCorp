@@ -1,25 +1,35 @@
 "use client"
 
 import { useState } from "react"
+import { Link, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, Settings, FolderOpen, LogOut, Menu, X } from "lucide-react"
-import { useAuth } from "../../context/AuthContext"   // ✅ context
-import { useNavigate } from "react-router-dom"    // ✅ router
 
 interface SidebarProps {
   className?: string
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export default  function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const { logout } = useAuth()
-  const navigate = useNavigate()
+  const location = useLocation()
 
   const navigationItems = [
-    { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard", isActive: true },
-    { title: "Services", icon: Settings, href: "/services", isActive: false },
-    { title: "Projects", icon: FolderOpen, href: "/projects", isActive: false },
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/dashboard/stats",
+    },
+    {
+      title: "Services",
+      icon: Settings,
+      href: "/dashboard/services",
+    },
+    {
+      title: "Projects",
+      icon: FolderOpen,
+      href: "/dashboard/projects",
+    },
   ]
 
   return (
@@ -47,21 +57,22 @@ export function Sidebar({ className }: SidebarProps) {
       <nav className="flex-1 p-4 space-y-2">
         {navigationItems.map((item) => {
           const Icon = item.icon
+          const isActive = location.pathname === item.href
+          
           return (
-            <Button
-              key={item.title}
-              variant={item.isActive ? "default" : "ghost"}
-              className={cn(
-                "w-full justify-start gap-3 text-sidebar-foreground",
-                item.isActive
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
-                  : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isCollapsed && "justify-center px-2",
-              )}
-            >
-              <Icon className="h-4 w-4 flex-shrink-0" />
-              {!isCollapsed && <span>{item.title}</span>}
-            </Button>
+            <Link key={item.title} to={item.href}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  isCollapsed && "justify-center px-2",
+                  isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                {!isCollapsed && <span>{item.title}</span>}
+              </Button>
+            </Link>
           )
         })}
       </nav>
@@ -70,10 +81,6 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="p-4 border-t border-sidebar-border">
         <Button
           variant="ghost"
-          onClick={async () => {
-            await logout()
-            navigate("/login", { replace: true })
-          }}
           className={cn(
             "w-full justify-start gap-3 text-sidebar-foreground hover:bg-destructive hover:text-destructive-foreground",
             isCollapsed && "justify-center px-2",

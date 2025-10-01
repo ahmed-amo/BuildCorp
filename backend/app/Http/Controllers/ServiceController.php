@@ -25,7 +25,6 @@ public function store(Request $request)
 {
     $validator = Validator::make($request->all(), [
         'title'       => 'required|string|max:255',
-        'slug'        => 'required|unique:services,slug',
         'description' => 'nullable|string',
         'status'      => 'nullable|boolean',
         'temp_image_id' => 'nullable|exists:temp_images,id',
@@ -41,7 +40,7 @@ public function store(Request $request)
     $service = new Service();
     $service->title = $request->title;
     $service->description = $request->description;
-    $service->slug = Str::slug($request->slug);
+    $service->slug = Str::slug($request->title);
     $service->status = $request->status;
 
     // Handle temp image if provided

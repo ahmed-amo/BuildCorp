@@ -46,7 +46,7 @@ export default function LoginForm() {
         login({ token: data.token, id: data.id });
     
         console.log("Login successful:", data);
-        navigate("/admin/dashboard");
+        navigate("/dashboard/stats");
       }
     } catch (err) {
       setError("Something went wrong. Please try again.");

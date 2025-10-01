@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart3, Users, DollarSign, TrendingUp } from "lucide-react"
 
-export function DashboardContent() {
+export default function DashboardContent() {
   const stats = [
     {
       title: "Total Revenue",
