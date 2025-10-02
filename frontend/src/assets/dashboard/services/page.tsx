@@ -1,8 +1,9 @@
 "use client"
 
+import axios from 'axios';
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
@@ -32,56 +33,53 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 type Service = {
   id: string
   title: string
-  category: string
+  status:string
   description: string
+  image_small?: string
 }
-
-const initialServices: Service[] = [
-  {
-    id: "1",
-    title: "Specialty",
-    category: "specialty",
-    description:
-      "Expert craftsmanship in specialized construction projects including custom architectural features, restoration work, and unique structural solutions.",
-  },
-  {
-    id: "2",
-    title: "Civil",
-    category: "civil",
-    description:
-      "Comprehensive civil engineering and construction services for infrastructure projects, roads, bridges, and public works development.",
-  },
-  {
-    id: "3",
-    title: "Corporate",
-    category: "corporate",
-    description:
-      "Professional commercial construction services for office buildings, retail spaces, and corporate facilities with modern design standards.",
-  },
-  {
-    id: "4",
-    title: "Residential",
-    category: "residential",
-    description:
-      "Quality residential construction from custom homes to multi-family developments, focusing on comfort, durability, and energy efficiency.",
-  },
-]
+axios.defaults.baseURL = "http://127.0.0.1:8000"; 
 
 export default function AdminServicesPage() {
-  const [services, setServices] = useState<Service[]>(initialServices)
+  const [services, setServices] = useState<Service[]>([])
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [deletingServiceId, setDeletingServiceId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     title: "",
-    category: "",
+    status: "",
     description: "",
   })
+  const fetchServices = async () => {
+    try {
+      const response = await axios.get('/api/services');
+      setServices(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch services.');
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await axios.get('/api/services');  // Calls your Laravel endpoint
+        setServices(response.data.data);  // response.data is the JSON array from backend
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch services. Please check your connection or backend.');
+        setLoading(false);
+      }
+    };
+  
+    fetchServices();
+  }, []);
 
   const handleAdd = () => {
     setEditingService(null)
-    setFormData({ title: "", category: "", description: "" })
+    setFormData({ title: "", status: "", description: "" })
     setIsDialogOpen(true)
   }
 
@@ -89,7 +87,7 @@ export default function AdminServicesPage() {
     setEditingService(service)
     setFormData({
       title: service.title,
-      category: service.category,
+      status: service.status,
       description: service.description,
     })
     setIsDialogOpen(true)
@@ -108,7 +106,7 @@ export default function AdminServicesPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (editingService) {
@@ -116,26 +114,28 @@ export default function AdminServicesPage() {
       setServices(
         services.map((s) =>
           s.id === editingService.id
-            ? { ...s, title: formData.title, category: formData.category, description: formData.description }
+            ? { ...s, title: formData.title, status: formData.status, description: formData.description }
             : s,
         ),
       )
     } else {
       // Add new service
-      const newService: Service = {
-        id: Date.now().toString(),
-        title: formData.title,
-        category: formData.category,
+      const response = await axios.post('/api/services', {
+        title: formData.title,  // Or 'name' if backend uses that
+        status: formData.status,
         description: formData.description,
-      }
-      setServices([...services, newService])
+      });
     }
 
     setIsDialogOpen(false)
-    setFormData({ title: "", category: "", description: "" })
+    setFormData({ title: "", status: "", description: "" })
+    fetchServices();
   }
 
+  
+
   return (
+    
     <div className="p-6 space-y-6">
       <Card>
         <CardHeader>
@@ -151,11 +151,14 @@ export default function AdminServicesPage() {
           </div>
         </CardHeader>
         <CardContent>
+        {loading ? (
+              <div className="text-center py-4">Loading services...</div>) : error ? (
+                    <div className="text-center py-4 text-destructive">{error}</div>) : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[200px]">Title</TableHead>
-                <TableHead className="w-[150px]">Category</TableHead>
+                <TableHead className="w-[150px]">Status</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead className="w-[100px] text-right">Actions</TableHead>
               </TableRow>
@@ -166,7 +169,7 @@ export default function AdminServicesPage() {
                   <TableCell className="font-medium">{service.title}</TableCell>
                   <TableCell>
                     <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-                      {service.category}
+                      {service.status}
                     </span>
                   </TableCell>
                   <TableCell className="max-w-md truncate">{service.description}</TableCell>
@@ -194,6 +197,7 @@ export default function AdminServicesPage() {
               ))}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -219,12 +223,12 @@ export default function AdminServicesPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="status">Status</Label>
                 <Input
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  placeholder="e.g., specialty, civil, corporate"
+                  id="status"
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  placeholder="Active/Not Active"
                   required
                 />
               </div>

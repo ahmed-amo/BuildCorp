@@ -1,97 +1,98 @@
-"use client"
+"use client";
 
-import React, { useEffect, useMemo, useState } from "react"
-import axios from "axios"
-import { Card } from "../src/components/ui/card"
-import { Button } from "../src/components/ui/button"
-import { Input } from "../src/components/ui/input"
-import { Badge } from "../src/components/ui/badge"
-import { Search, Filter } from "lucide-react"
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { Card } from "../src/components/ui/card";
+import { Button } from "../src/components/ui/button";
+import { Input } from "../src/components/ui/input";
+import { Badge } from "../src/components/ui/badge";
+import { Search, Filter } from "lucide-react";
+import { Link } from "react-router-dom"; // For routing
 
-// Type (remove if using plain JS)
 interface Service {
-  id: number | string
-  title: string
-  category?: string
-  description?: string
-  image?: string | null
-  slug?: string
+  id: number | string;
+  title: string;
+  category?: string;
+  description?: string;
+  image_small?: string | null; // Match backend field
+  image_large?: string | null; // Match backend field
+  slug?: string;
 }
 
-const categories = ["all", "specialty", "civil", "corporate", "residential"]
+const categories = ["all", "specialty", "civil", "corporate", "residential"];
 
 export default function ServicesPage() {
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [services, setServices] = useState<Service[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let mounted = true
-    setLoading(true)
+    let mounted = true;
+    setLoading(true);
     axios
       .get("http://127.0.0.1:8000/api/services")
       .then((res) => {
-        if (!mounted) return
+        if (!mounted) return;
 
-        // Normalize response shape: support both plain array and { data: [...] } shapes
-        const payload = Array.isArray(res.data) ? res.data : res.data?.data ?? res.data
+        const payload = Array.isArray(res.data) ? res.data : res.data?.data ?? res.data;
 
-        // Map & normalize fields so your UI is safe
         const normalized: Service[] = (payload || []).map((s: any, idx: number) => ({
           id: s.id ?? s.slug ?? idx,
           title: s.title ?? "Untitled Service",
-          category: s.category ?? s.slug ?? "uncategorized",
+          category: s.category ?? s.slug?.split("-")[0] ?? "uncategorized", // Fallback to slug's first word
           description: s.description ?? "",
-          image: s.image ?? null,
+          image_small: s.image_small ?? null, // Use image_small
+          image_large: s.image_large ?? null, // Use image_large
           slug: s.slug ?? undefined,
-        }))
+        }));
 
-        setServices(normalized)
-        setError(null)
+        setServices(normalized);
+        setError(null);
       })
       .catch((err) => {
-        console.error("Error fetching services:", err)
-        setError(err?.message ?? "Failed to load services")
+        console.error("Error fetching services:", err);
+        setError(err?.message ?? "Failed to load services");
       })
-      .finally(() => setLoading(false))
+      .finally(() => setLoading(false));
 
     return () => {
-      mounted = false
-    }
-  }, [])
+      mounted = false;
+    };
+  }, []);
 
   const filteredServices = useMemo(() => {
     return services.filter((service) => {
-      const title = (service.title || "").toLowerCase()
-      const desc = (service.description || "").toLowerCase()
-      const q = searchTerm.toLowerCase()
+      const title = (service.title || "").toLowerCase();
+      const desc = (service.description || "").toLowerCase();
+      const q = searchTerm.toLowerCase();
 
-      const matchesSearch = title.includes(q) || desc.includes(q)
-      const matchesCategory = selectedCategory === "all" || service.category === selectedCategory
+      const matchesSearch = title.includes(q) || desc.includes(q);
+      const matchesCategory = selectedCategory === "all" || service.category === selectedCategory;
 
-      return matchesSearch && matchesCategory
-    })
-  }, [services, searchTerm, selectedCategory])
+      return matchesSearch && matchesCategory;
+    });
+  }, [services, searchTerm, selectedCategory]);
 
-  // Helper to build image src (handles stored path vs full URL)
   const imageSrc = (img?: string | null) => {
-    if (!img) return "/placeholder.svg?height=256&width=400&query=construction"
-    if (img.startsWith("http")) return img
-    // adjust backend URL if different
-    return `http://127.0.0.1:8000/storage/${img}`
-  }
+    if (!img) return "/placeholder.svg?height=256&width=400&query=construction";
+    if (img.startsWith("http")) return img;
+    return `http://127.0.0.1:8000/storage/${img}`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4 text-balance">Our Construction Services</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4 text-balance">
+            Our Construction Services
+          </h1>
           <p className="text-lg text-muted-foreground max-w-2xl text-pretty">
-            Delivering excellence across all construction sectors with decades of experience and commitment to quality craftsmanship.
+            Delivering excellence across all construction sectors with decades of experience and
+            commitment to quality craftsmanship.
           </p>
         </div>
       </div>
@@ -130,7 +131,7 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        {/* status */}
+        {/* Status */}
         <div className="mb-6">
           {loading ? (
             <p className="text-muted-foreground">Loading services…</p>
@@ -154,7 +155,7 @@ export default function ServicesPage() {
             >
               <div className="relative h-64 overflow-hidden">
                 <img
-                  src={imageSrc(service.image)}
+                  src={imageSrc(service.image_small)} // Use image_small for cards
                   alt={`${service.title} construction services`}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
@@ -170,14 +171,18 @@ export default function ServicesPage() {
                   }`}
                 >
                   <h3 className="text-2xl font-bold text-primary-foreground mb-4">{service.title}</h3>
-                  <p className="text-primary-foreground/90 text-sm leading-relaxed mb-6">{service.description}</p>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="self-start bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  >
-                    Read More
-                  </Button>
+                  <p className="text-primary-foreground/90 text-sm leading-relaxed mb-6">
+                    {service.description}
+                  </p>
+                  <Link to={`/services/${service.slug}`}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="self-start bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    >
+                      Read More
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </Card>
@@ -191,8 +196,8 @@ export default function ServicesPage() {
             <Button
               variant="outline"
               onClick={() => {
-                setSearchTerm("")
-                setSelectedCategory("all")
+                setSearchTerm("");
+                setSelectedCategory("all");
               }}
             >
               Clear Filters
@@ -201,5 +206,5 @@ export default function ServicesPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

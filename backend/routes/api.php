@@ -1,20 +1,17 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController;
+
 use App\Http\Controllers\AuthentificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\TempImageController;
+use App\Http\Controllers\ServicesController;
 
-//authenification
+
 Route::post('authenticate' ,[AuthentificationController::class,'authenticate']);
 Route::get('authenticate' ,[AuthentificationController::class,'authenticate']);
 
-//showing services
-
-Route::get('/services', [ServiceController::class, 'index']);
-
+Route::get('services', [ServicesController::class, 'index']);
+Route::get('services/{slug}', [ServicesController::class, 'show']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -24,14 +21,11 @@ Route::group(['middleware'=> ['auth:sanctum']],function(){
 
     //AdminAPI
     Route::post('/logout', [AuthentificationController::class, 'logout']);
-    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     //ServicesAPI
-    Route::post('/services', [ServiceController::class, 'store']);
-    Route::put('/services/{id}', [ServiceController::class, 'update']);
-    Route::get('/services/{id}', [ServiceController::class, 'show']);
-    Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
+    Route::post('/services',[ServicesController::class,'store']);
+    Route::put('services/{id}', [ServicesController::class, 'update']);
+    Route::delete('services/{id}', [ServicesController::class, 'destroy']);
 
-    //imageAPI
-    Route::post('/temp-images', [TempImageController::class, 'store']);
+
 });
