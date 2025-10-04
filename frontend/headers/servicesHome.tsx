@@ -5,6 +5,15 @@ import { Card } from "../src/components/ui/card"
 import { Button } from "../src/components/ui/button"
 import React from "react"
 
+interface Service {
+  id: number | string;
+  title: string;
+  category?: string;
+  description?: string;
+  image_small?: string | null; // Match backend field
+  image_large?: string | null; // Match backend field
+  slug?: string;
+}
 const services = [
   {
     id: "specialty",

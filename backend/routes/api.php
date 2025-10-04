@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ServicesController;
 
-
+Route::post('/services',[ServicesController::class,'store']);
+Route::put('services/{id}', [ServicesController::class, 'update']);
+Route::delete('services/{id}', [ServicesController::class, 'destroy']);
 Route::post('authenticate' ,[AuthentificationController::class,'authenticate']);
 Route::get('authenticate' ,[AuthentificationController::class,'authenticate']);
 
@@ -23,9 +25,6 @@ Route::group(['middleware'=> ['auth:sanctum']],function(){
     Route::post('/logout', [AuthentificationController::class, 'logout']);
 
     //ServicesAPI
-    Route::post('/services',[ServicesController::class,'store']);
-    Route::put('services/{id}', [ServicesController::class, 'update']);
-    Route::delete('services/{id}', [ServicesController::class, 'destroy']);
 
 
 });

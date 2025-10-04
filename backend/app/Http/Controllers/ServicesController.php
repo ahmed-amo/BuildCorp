@@ -27,7 +27,7 @@ class ServicesController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'nullable|boolean',
+            'status' => 'nullable|string|in:active,inactive',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif', // Image: optional, valid types, max 2MB
         ]);
 
@@ -43,7 +43,7 @@ class ServicesController extends Controller
         $service->title = $request->title;
         $service->description = $request->description;
         $service->slug = Str::slug($request->title);
-        $service->status = $request->status ?? 0; // Default to 0 if not provided
+        $service->status = $request->status ?? 'inactive'; // Default to 0 if not provided
 
         // Handle image if uploaded
         if ($request->hasFile('image')) {
@@ -93,69 +93,83 @@ class ServicesController extends Controller
             'data' => $service
         ]);
     }
-    public function update(Request $request, string $id)
-    {
-        $service = Service::find($id);
-        if (!$service) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Service not found'
-            ], 404);
-        }
+    public function update(Request $request, $id)
+{
+    $startTime = microtime(true); // ✅ Debug timer
 
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'slug' => ['required', Rule::unique('services', 'slug')->ignore($id)],
-            'description' => 'nullable|string',
-            'status' => 'nullable|boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+    $service = Service::findOrFail($id); // Find service or 404
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+    // Validate (same as store)
+    $validator = Validator::make($request->all(), [
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'status' => 'nullable|string|in:active,inactive',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Optional, same rules
+    ]);
 
-        $service->title = $request->title;
-        $service->description = $request->description;
-        $service->slug = Str::slug($request->slug);
-        $service->status = $request->status ?? $service->status;
-
-        if ($request->hasFile('image')) {
-            // Delete old images if they exist
-            if ($service->image_large) {
-                Storage::disk('public')->delete($service->image_large);
-            }
-            if ($service->image_small) {
-                Storage::disk('public')->delete($service->image_small);
-            }
-
-            $image = $request->file('image');
-            $filename = uniqid() . '.jpg';
-            $largePath = 'services/large/' . $filename;
-            $smallPath = 'services/small/' . $filename;
-
-            Storage::disk('public')->put($largePath, Image::make($image)
-                ->resize(1200, null, fn($constraint) => $constraint->aspectRatio()->upsize())
-                ->encode('jpg'));
-            Storage::disk('public')->put($smallPath, Image::make($image)
-                ->fit(300, 300)
-                ->encode('jpg'));
-
-            $service->image_large = $largePath;
-            $service->image_small = $smallPath;
-        }
-
-        $service->save();
-
+    if ($validator->fails()) {
+        \Log::error('Update validation failed:', $validator->errors()->toArray()); // ✅ Log errors
         return response()->json([
-            'status' => true,
-            'message' => 'Service updated successfully',
-            'data' => $service
-        ]);
+            'status' => false,
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    // Update text fields
+    $service->title = $request->title;
+    $service->description = $request->description;
+    $service->slug = Str::slug($request->title);
+    $service->status = $request->status ?? 'inactive';
+
+    $imageTimeStart = microtime(true); // ✅ Image timer
+
+    if ($request->hasFile('image')) {
+        \Log::info("Update: Image file detected: " . $request->file('image')->getClientOriginalName()); // ✅ Confirm file arrives
+
+        $image = $request->file('image');
+        $filename = uniqid() . '.' . $image->getClientOriginalExtension();
+
+        $largePath = 'services/large/' . $filename;
+        $smallPath = 'services/small/' . $filename;
+
+        // Large image (optimized as before)
+        $largeImage = Image::make($image)
+            ->resize(800, null, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            })
+            ->encode('jpg', 80)
+            ->stream();
+        Storage::disk('public')->put($largePath, $largeImage);
+
+        // Small image
+        $smallImage = Image::make($image)
+            ->fit(300, 300)
+            ->encode('jpg', 80)
+            ->stream();
+        Storage::disk('public')->put($smallPath, $smallImage);
+
+        // Overwrite old images
+        $service->image_large = $largePath;
+        $service->image_small = $smallPath;
+
+        $imageTime = microtime(true) - $imageTimeStart;
+        \Log::info("Update image processing time: {$imageTime}s");
+    } else {
+        \Log::info('Update: No new image uploaded—keeping old.'); // ✅ Log if no file
+    }
+
+    $service->save();
+
+    $totalTime = microtime(true) - $startTime;
+    \Log::info("Total update time: {$totalTime}s");
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Service updated successfully',
+        'data' => $service
+    ]);
+}
     public function destroy(string $id)
     {
         $service = Service::find($id);

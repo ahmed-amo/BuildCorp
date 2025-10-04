@@ -13,27 +13,36 @@ import {
 import { Alert, AlertDescription } from "../src/components/ui/alert";
 import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {useAuth} from "../src/context/AuthContext"
+import { useAuth } from "../src/context/AuthContext";
+
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
- const navigate = useNavigate();
- const { login } = useAuth();
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
+      // ✅ Step 1: Fetch Sanctum CSRF cookie (sets XSRF-TOKEN for security)
+      await fetch("http://127.0.0.1:8000/sanctum/csrf-cookie", {
+        credentials: "include", // Include cookies for SPA auth
+      });
+
+      // ✅ Step 2: Now send login POST with CSRF protection
       const response = await fetch("http://127.0.0.1:8000/api/authenticate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
+        credentials: "include", // Send the CSRF cookie with the request
         body: JSON.stringify({ email, password }),
       });
 
@@ -42,9 +51,9 @@ export default function LoginForm() {
       if (!data.status) {
         setError(data.message || "Invalid credentials");
       } else {
-        // ✅ Save with context instead of directly writing to localStorage
+        // ✅ Save with context (token will flow to localStorage via AuthContext)
         login({ token: data.token, id: data.id });
-    
+
         console.log("Login successful:", data);
         navigate("/dashboard/stats");
       }
@@ -166,7 +175,3 @@ export default function LoginForm() {
     </div>
   );
 }
-function login(arg0: { token: any; id: any; }) {
-  throw new Error("Function not implemented.");
-}
-
