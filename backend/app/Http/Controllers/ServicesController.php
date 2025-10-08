@@ -23,12 +23,11 @@ class ServicesController extends Controller
 
     public function store(Request $request)
     {
-        // Validate inputs, including the image file
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:65535',
             'status' => 'nullable|string|in:active,inactive',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif', // Image: optional, valid types, max 2MB
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
         ]);
 
         if ($validator->fails()) {
@@ -43,16 +42,16 @@ class ServicesController extends Controller
         $service->title = $request->title;
         $service->description = $request->description;
         $service->slug = Str::slug($request->title);
-        $service->status = $request->status ?? 'inactive'; // Default to 0 if not provided
+        $service->status = $request->status ?? 'inactive';
 
-        // Handle image if uploaded
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $filename = uniqid() . '.jpg'; // Unique name, standardize to JPG
+            $filename = uniqid() . '.jpg';
 
             // Paths for large and small images
             $largePath = 'services/large/' . $filename;
             $smallPath = 'services/small/' . $filename;
+            $extraPath = 'services/extra/' . $filename;
 
             // Process and save large image (1200px wide, keep aspect ratio)
             $largeImage = Image::make($image)->resize(1200, null, function ($constraint) {
@@ -65,9 +64,13 @@ class ServicesController extends Controller
             $smallImage = Image::make($image)->fit(300, 300)->encode('jpg');
             Storage::disk('public')->put($smallPath, $smallImage);
 
+            $extraImage = Image::make($image)->fit(24, 24)->encode('jpg');
+            Storage::disk('public')->put($extraPath, $extraImage);
+
             // Save paths as attributes in the service
             $service->image_large = $largePath;
             $service->image_small = $smallPath;
+            $service->image_extra = $extraPath;
         }
 
         $service->save();

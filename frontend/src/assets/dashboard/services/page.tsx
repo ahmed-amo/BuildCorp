@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import axios from 'axios';
-import type React from "react"
+import axios from "axios";
+import type React from "react";
 import { Upload, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,163 +30,161 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Plus, Pencil, Trash2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Service = {
-  id: string
-  title: string
-  status: string
-  description: string
-  image_small?: string
-}
+  id: string;
+  title: string;
+  status: string;
+  description: string;
+  image_small?: string;
+  image_large?: string;
+  image_extra?: string;
+};
 
-axios.defaults.baseURL = "http://127.0.0.1:8000"; 
+axios.defaults.baseURL = "http://127.0.0.1:8000";
 axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("token")}`;
 
 export default function AdminServicesPage() {
-  const [services, setServices] = useState<Service[]>([])
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [editingService, setEditingService] = useState<Service | null>(null)
-  const [deletingServiceId, setDeletingServiceId] = useState<string | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [deletingServiceId, setDeletingServiceId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     status: "",
     description: "",
-  })
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const setAxiosAuth = () => {
-    const token = localStorage.getItem('token');
-    console.log('Setting Axios token:', token ? 'Present' : 'Missing'); // Debug log
-    axios.defaults.headers.common['Authorization'] = token ? `Bearer ${token}` : '';
-    axios.defaults.withCredentials = true; // For CSRF cookies
+    const token = localStorage.getItem("token");
+    console.log("Setting Axios token:", token ? "Present" : "Missing");
+    axios.defaults.headers.common["Authorization"] = token ? `Bearer ${token}` : "";
+    axios.defaults.withCredentials = true;
   };
 
   useEffect(() => {
-    setAxiosAuth(); // Set on mount
-    fetchServices(); // Your existing fetch
+    setAxiosAuth();
+    fetchServices();
   }, []);
 
   const fetchServices = async () => {
     try {
-      const response = await axios.get('/api/services');
-      
-      // ✅ Debug log: Check raw status (should be "active" or "inactive")
-      console.log('Raw services from backend:', response.data.data);
-      
-      // ✅ No conversion needed—status is already string 'active'/'inactive'
+      const response = await axios.get("/api/services");
+      console.log("Raw services from backend:", response.data.data);
       const servicesData = response.data.data.map((service: any) => ({
         ...service,
-        status: service.status || 'inactive'  // Fallback if null
+        status: service.status || "inactive",
       }));
-      
       setServices(servicesData);
       setLoading(false);
     } catch (err) {
-      setError('Failed to fetch services. Please check your connection or backend.');
+      setError("Failed to fetch services. Please check your connection or backend.");
       setLoading(false);
     }
   };
 
   const handleAdd = () => {
-    setEditingService(null)
-    setFormData({ title: "", status: "", description: "" })
-    setIsDialogOpen(true)
+    setEditingService(null);
+    setFormData({ title: "", status: "", description: "" });
     setImageFile(null);
-  }
+    setIsDialogOpen(true);
+  };
 
   const handleEdit = (service: Service) => {
-    setEditingService(service)
+    setEditingService(service);
     setFormData({
       title: service.title,
       status: service.status,
       description: service.description,
-    })
+    });
     setImageFile(null);
-    setIsDialogOpen(true)
-  }
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = (id: string) => {
-    setDeletingServiceId(id)
-    setIsDeleteDialogOpen(true)
-  }
+    setDeletingServiceId(id);
+    setIsDeleteDialogOpen(true);
+  };
 
   const confirmDelete = async () => {
     setAxiosAuth();
     if (deletingServiceId) {
       try {
         await axios.delete(`/api/services/${deletingServiceId}`);
-        fetchServices(); // Refresh from backend
+        fetchServices();
       } catch (err) {
-        console.error('Failed to delete:', err);
-        setError('Failed to delete service.');
+        console.error("Failed to delete:", err);
+        setError("Failed to delete service.");
       }
-      setIsDeleteDialogOpen(false)
-      setDeletingServiceId(null)
+      setIsDeleteDialogOpen(false);
+      setDeletingServiceId(null);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-  
+
     try {
       setAxiosAuth();
-      // ✅ Create FormData for text + file
       const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('status', formData.status);
-      formDataToSend.append('description', formData.description);
-      
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("status", formData.status);
+      formDataToSend.append("description", formData.description);
+
       if (imageFile) {
-        formDataToSend.append('image', imageFile); // ✅ Append file if selected
+        formDataToSend.append("image", imageFile);
       }
-  
-      // ✅ Debug: Log FormData contents
+
       for (let pair of formDataToSend.entries()) {
         console.log(pair[0], pair[1]);
       }
-  
+
       if (editingService) {
-        // Edit: PUT with ID
         await axios.put(`/api/services/${editingService.id}`, formDataToSend, {
           headers: {
-            'Content-Type': 'multipart/form-data', // Required for files
+            "Content-Type": "multipart/form-data",
           },
         });
       } else {
-        // Add: POST
-        await axios.post('/api/services', formDataToSend, {
+        await axios.post("/api/services", formDataToSend, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         });
       }
-  
-      // Success: Close, reset, refresh
+
       setIsDialogOpen(false);
       setFormData({ title: "", status: "", description: "" });
-      setImageFile(null); // ✅ Reset file
+      setImageFile(null);
       fetchServices();
     } catch (err: any) {
-      console.error('Error saving service:', err.response?.data || err.message);
+      console.error("Error saving service:", err.response?.data || err.message);
       if (err.response?.status === 422) {
-        console.error('Validation errors:', err.response.data.errors);
-        setError('Validation failed—check fields and file size.');
+        console.error("Validation errors:", err.response.data.errors);
+        setError("Validation failed—check fields and file size.");
       } else {
-        setError('Failed to save service.');
+        setError("Failed to save service.");
       }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getImageUrl = (imagePath?: string): string | undefined => {
+    if (!imagePath) return undefined;
+    return `http://127.0.0.1:8000/storage/${imagePath}`;
   };
 
   return (
@@ -213,51 +211,70 @@ export default function AdminServicesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[100px]">Image (Extra)</TableHead>
                   <TableHead className="w-[200px]">Title</TableHead>
-                  <TableHead className="w-[150px]">Status</TableHead>
-                  <TableHead>Description</TableHead>
+                  <TableHead className="w-[120px]">Status</TableHead>
+                  <TableHead className="max-w-[300px]">Description</TableHead>
                   <TableHead className="w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {services.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell className="font-medium">{service.title}</TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-                        {service.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="max-w-md truncate">{service.description}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(service)}
-                          className="text-primary hover:text-primary hover:bg-primary/10"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(service.id)}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {services.map((service) => {
+                  console.log(`Service ${service.id} image_extra:`, service.image_extra);
+                  return (
+                    <TableRow key={service.id}>
+                      <TableCell>
+                        {getImageUrl(service.image_extra) ? (
+                          <img
+                            src={getImageUrl(service.image_extra)}
+                            alt={`${service.title} extra`}
+                            className="h-6 w-6 object-cover rounded border"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="h-6 w-6 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
+                            No Image
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">{service.title}</TableCell>
+                      <TableCell>
+                        <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+                          {service.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="max-w-md truncate">{service.description}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(service)}
+                            className="text-primary hover:text-primary hover:bg-primary/10"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(service.id)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[525px]">
           <form onSubmit={handleSubmit}>
@@ -313,21 +330,27 @@ export default function AdminServicesPage() {
                   <Input
                     id="image"
                     type="file"
-                    accept="image/*" // Only images
-                    onChange={(e) => setImageFile(e.target.files?.[0] || null)} // Set file state
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                     className="cursor-pointer"
                     disabled={isSubmitting}
                   />
-                  <Upload className="absolute right-2 top-2 h-4 w-4 text-muted-foreground" /> {/* Optional icon */}
+                  <Upload className="absolute right-2 top-2 h-4 w-4 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground">Upload a JPG/PNG up to 5MB. Will be resized automatically.</p>
+                <p className="text-sm text-muted-foreground">
+                  Upload a JPG/PNG up to 2MB. Will be resized to 24x24 (dashboard), 300x300 (homepage), and large (details page).
+                </p>
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingService ? "Update" : "Add"} Service
               </Button>
@@ -336,7 +359,6 @@ export default function AdminServicesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -357,5 +379,5 @@ export default function AdminServicesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

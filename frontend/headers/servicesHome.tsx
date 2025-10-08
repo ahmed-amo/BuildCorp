@@ -114,7 +114,7 @@ return (
                       }`}
                     >
                       <h3 className="text-2xl font-bold text-primary-foreground mb-4">{service.title}</h3>
-                      <p className="text-primary-foreground/90 text-sm leading-relaxed mb-6">{service.description}</p>
+                      <p className="text-primary-foreground/90 text-sm leading-relaxed mb-6 line-clamp-3">{service.description}</p>
                       <Button
                         variant="secondary"
                         size="sm"

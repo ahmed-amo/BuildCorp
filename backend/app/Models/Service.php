@@ -14,6 +14,10 @@ class Service extends Model
         'image',
     ];
 
+    public function projects()
+{
+    return $this->hasMany(Project::class, 'category_id');
+}
     /**
      * The attributes that should be cast.
      */
