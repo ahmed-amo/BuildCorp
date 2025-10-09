@@ -13,6 +13,7 @@ class Project extends Model
         'year',
         'city',
         'image',
+        'category',
     ];
     public function projects()
 {

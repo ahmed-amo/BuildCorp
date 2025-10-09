@@ -11,7 +11,9 @@ use App\Http\Controllers\ServicesController;
 //PROJECTS
 Route::get('projects', [ProjectsController::class, 'index']);
 Route::post('projects', [ProjectsController::class,'store']);
-
+Route::put('projects/{id}', [ProjectsController::class,'update']);
+Route::delete('projects/{id}', [ProjectsController::class,'destroy']);
+Route::get('projects/{slug}', [ServicesController::class, 'show']);
 
 
 //AUTH
