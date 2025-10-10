@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "../src/assets/button"
 import { Menu, X, HardHat, Phone } from "lucide-react"
 import React from "react"
+import { Link } from "react-router-dom"
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -21,23 +22,33 @@ export default function Navbar() {
             <span className="text-xl font-bold">BuildCorp</span>
           </div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="home" className="hover:text-secondary transition-colors duration-200">
+            <Link to="/home">
+            <a className="hover:text-secondary transition-colors duration-200">
               Home
             </a>
-            <a href="services" className="hover:text-secondary transition-colors duration-200">
+            </Link> 
+            <Link to="/services">
+            <a className="hover:text-secondary transition-colors duration-200">
               Services
             </a>
+            </Link>          
+            <Link to="/projects">
             <a href="projects" className="hover:text-secondary transition-colors duration-200">
               Projects
             </a>
-            <a href="about" className="hover:text-secondary transition-colors duration-200">
+            </Link>
+            <Link to="/about">
+            <a className="hover:text-secondary transition-colors duration-200">
               About
             </a>
-            <a href="contact" className="hover:text-secondary transition-colors duration-200">
+            </Link>
+            <Link to="contact">
+            <a className="hover:text-secondary transition-colors duration-200">
               Contact
             </a>
+            </Link>
+            
           </div>
 
           {/* Contact Info & CTA */}

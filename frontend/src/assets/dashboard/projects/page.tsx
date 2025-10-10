@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,107 +27,82 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Pencil, Trash2, Search } from "lucide-react"
+import { Plus, Pencil, Trash2, Loader2, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import axios from "axios"
 
-type Project = {
-  id: string
+axios.defaults.baseURL = "http://127.0.0.1:8000"
+
+interface Project {
+  id: number
   title: string
+  description?: string
+  category: string
+  year: number
   city: string
-  category: "Corporate" | "Residential" | "Civil" | "Specialty"
-  description: string
-  image: string
-  year: string
+  slug?: string
+  image_small?: string
+  image_large?: string
+  image_extra?: string
 }
 
-const initialProjects: Project[] = [
-  {
-    id: "manhattan-tower",
-    title: "Manhattan Business Tower",
-    city: "New York",
-    category: "Corporate",
-    description:
-      "45-story commercial complex featuring sustainable design and modern office spaces in the heart of Manhattan.",
-    image: "/modern-skyscraper-manhattan-business-tower.jpg",
-    year: "2024",
-  },
-  {
-    id: "chicago-residential",
-    title: "Lakefront Residences",
-    city: "Chicago",
-    category: "Residential",
-    description: "Luxury waterfront residential development with 200 units overlooking Lake Michigan.",
-    image: "/luxury-residential-building-chicago-lakefront.jpg",
-    year: "2023",
-  },
-  {
-    id: "miami-bridge",
-    title: "Biscayne Bay Bridge",
-    city: "Miami",
-    category: "Civil",
-    description: "State-of-the-art cable-stayed bridge connecting downtown Miami with enhanced pedestrian walkways.",
-    image: "/modern-cable-bridge-miami-bay.jpg",
-    year: "2024",
-  },
-  {
-    id: "seattle-hospital",
-    title: "Pacific Medical Center",
-    city: "Seattle",
-    category: "Specialty",
-    description: "Advanced healthcare facility with specialized surgical suites and patient-centered design.",
-    image: "/modern-hospital-building-seattle.jpg",
-    year: "2023",
-  },
-  {
-    id: "denver-stadium",
-    title: "Rocky Mountain Arena",
-    city: "Denver",
-    category: "Specialty",
-    description: "Multi-purpose sports and entertainment venue with retractable roof and sustainable features.",
-    image: "/modern-stadium-denver-mountains.jpg",
-    year: "2024",
-  },
-  {
-    id: "austin-tech-campus",
-    title: "Innovation Tech Campus",
-    city: "Austin",
-    category: "Corporate",
-    description: "Collaborative workspace campus for tech companies with flexible office configurations.",
-    image: "/modern-tech-campus-austin-texas.jpg",
-    year: "2023",
-  },
-]
-
-const categoryColors = {
-  Corporate: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  Residential: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  Civil: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  Specialty: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+interface FormData {
+  title: string
+  city: string
+  category: string
+  description: string
+  year: number
+  image?: File | null
 }
 
 export default function ProjectsAdminPage() {
-  const [projects, setProjects] = useState<Project[]>(initialProjects)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
-  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
-  const [formData, setFormData] = useState<Omit<Project, "id">>({
+  const [deletingProjectId, setDeletingProjectId] = useState<number | null>(null)
+  const [formData, setFormData] = useState<FormData>({
     title: "",
     city: "",
     category: "Corporate",
     description: "",
-    image: "",
-    year: new Date().getFullYear().toString(),
+    year: new Date().getFullYear(),
+    image: null,
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.year.includes(searchQuery),
-  )
+  // Set authorization token for all requests
+  const setAxiosAuth = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
+    }
+  }
 
+  // Fetch all projects on component mount
+  useEffect(() => {
+    setAxiosAuth()
+    fetchProjects()
+  }, [])
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true)
+      const response = await axios.get("/api/projects")
+      setProjects(response.data.data || [])
+      setError(null)
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to fetch projects")
+      console.error("Fetch error:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Open dialog for creating or editing
   const handleOpenDialog = (project?: Project) => {
     if (project) {
       setEditingProject(project)
@@ -137,10 +110,14 @@ export default function ProjectsAdminPage() {
         title: project.title,
         city: project.city,
         category: project.category,
-        description: project.description,
-        image: project.image,
+        description: project.description || "",
         year: project.year,
+        image: null,
       })
+      // Set preview to existing image
+      if (project.image_extra) {
+        setImagePreview(`http://127.0.0.1:8000/storage/${project.image_extra}`)
+      }
     } else {
       setEditingProject(null)
       setFormData({
@@ -148,9 +125,10 @@ export default function ProjectsAdminPage() {
         city: "",
         category: "Corporate",
         description: "",
-        image: "",
-        year: new Date().getFullYear().toString(),
+        year: new Date().getFullYear(),
+        image: null,
       })
+      setImagePreview(null)
     }
     setIsDialogOpen(true)
   }
@@ -158,37 +136,112 @@ export default function ProjectsAdminPage() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
     setEditingProject(null)
+    setImagePreview(null)
+    setError(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (editingProject) {
-      setProjects(
-        projects.map((project) => (project.id === editingProject.id ? { ...formData, id: project.id } : project)),
-      )
-    } else {
-      const newProject: Project = {
-        ...formData,
-        id: formData.title.toLowerCase().replace(/\s+/g, "-"),
+  // Handle image file selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setFormData({ ...formData, image: file })
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
       }
-      setProjects([...projects, newProject])
+      reader.readAsDataURL(file)
     }
-
-    handleCloseDialog()
   }
 
-  const handleDelete = (id: string) => {
+  // Submit form (create or update)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      // Create FormData for multipart/form-data
+      const submitData = new FormData()
+      submitData.append("title", formData.title)
+      submitData.append("city", formData.city)
+      submitData.append("category", formData.category)
+      submitData.append("description", formData.description)
+      submitData.append("year", formData.year.toString())
+      
+      if (formData.image) {
+        submitData.append("image", formData.image)
+      }
+
+      if (editingProject) {
+        // UPDATE existing project
+        submitData.append("_method", "PUT") // Laravel method spoofing
+        const response = await axios.post(
+          `/api/projects/${editingProject.id}`,
+          submitData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        )
+        
+        // Update project in state
+        setProjects(
+          projects.map((p) =>
+            p.id === editingProject.id ? response.data.data : p
+          )
+        )
+      } else {
+        // CREATE new project
+        const response = await axios.post("/api/projects", submitData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+        
+        // Add new project to state
+        setProjects([...projects, response.data.data])
+      }
+
+      handleCloseDialog()
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.errors ||
+          "Failed to save project"
+      )
+      console.error("Submit error:", err.response?.data)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Open delete confirmation dialog
+  const handleDelete = (id: number) => {
     setDeletingProjectId(id)
     setIsDeleteDialogOpen(true)
   }
 
-  const confirmDelete = () => {
-    if (deletingProjectId) {
-      setProjects(projects.filter((project) => project.id !== deletingProjectId))
+  // Confirm and execute delete
+  const confirmDelete = async () => {
+    if (!deletingProjectId) return
+
+    try {
+      await axios.delete(`/api/projects/${deletingProjectId}`)
+      
+      // Remove from state
+      setProjects(projects.filter((p) => p.id !== deletingProjectId))
       setDeletingProjectId(null)
+      setIsDeleteDialogOpen(false)
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to delete project")
+      console.error("Delete error:", err)
     }
-    setIsDeleteDialogOpen(false)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
@@ -199,6 +252,13 @@ export default function ProjectsAdminPage() {
           Manage your construction projects, add new projects, and update existing ones.
         </p>
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
@@ -214,23 +274,12 @@ export default function ProjectsAdminPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search projects by title, city, category, or year..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Title</TableHead>
+                  <TableHead>Image</TableHead>
                   <TableHead>City</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Year</TableHead>
@@ -238,19 +287,34 @@ export default function ProjectsAdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProjects.length === 0 ? (
+                {projects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No projects found. {searchQuery && "Try adjusting your search."}
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No projects found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredProjects.map((project) => (
+                  projects.map((project) => (
                     <TableRow key={project.id}>
                       <TableCell className="font-medium">{project.title}</TableCell>
+                      <TableCell>
+                        {project.image_extra ? (
+                          <img
+                            src={`http://127.0.0.1:8000/storage/${project.image_extra}`}
+                            alt={project.title}
+                            className="w-12 h-12 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                            No img
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell>{project.city}</TableCell>
                       <TableCell>
-                        <Badge className={categoryColors[project.category]}>{project.category}</Badge>
+                        <Badge className="bg-amber-800 text-white px-2 py-1 text-xs rounded-full">
+                          {project.category}
+                        </Badge>
                       </TableCell>
                       <TableCell>{project.year}</TableCell>
                       <TableCell className="text-right">
@@ -323,8 +387,9 @@ export default function ProjectsAdminPage() {
                   <Label htmlFor="year">Year</Label>
                   <Input
                     id="year"
+                    type="number"
                     value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
                     placeholder="2024"
                     required
                   />
@@ -335,7 +400,7 @@ export default function ProjectsAdminPage() {
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(value: Project["category"]) => setFormData({ ...formData, category: value })}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger id="category">
                     <SelectValue />
@@ -362,23 +427,41 @@ export default function ProjectsAdminPage() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="image">Image URL</Label>
+                <Label htmlFor="image">Project Image</Label>
                 <Input
                   id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="/project-image.jpg"
-                  required
+                  type="file"
+                  accept="image/jpeg,image/png,image/jpg,image/gif"
+                  onChange={handleImageChange}
+                  className="cursor-pointer"
                 />
-                <p className="text-sm text-muted-foreground">Enter the path or URL to the project image</p>
+                <p className="text-sm text-muted-foreground">
+                  {editingProject ? "Upload a new image to replace the existing one" : "Upload an image for this project"}
+                </p>
+                {imagePreview && (
+                  <div className="mt-2">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded border"
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCloseDialog}>
+              <Button type="button" variant="outline" onClick={handleCloseDialog} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary hover:bg-primary/90">
-                {editingProject ? "Update Project" : "Add Project"}
+              <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {editingProject ? "Updating..." : "Adding..."}
+                  </>
+                ) : (
+                  <>{editingProject ? "Update Project" : "Add Project"}</>
+                )}
               </Button>
             </DialogFooter>
           </form>

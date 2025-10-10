@@ -12,8 +12,8 @@ interface Service {
   id: number | string;
   title: string;
   description?: string;
-  image_small?: string | null; // Match backend field
-  image_large?: string | null; // Match backend field
+  image_small?: string | null;
+  image_large?: string | null; 
   slug?: string;
 }
 

@@ -93,7 +93,7 @@ return (
                 onMouseEnter={() => setHoveredCard(service.id as string)}
                 onMouseLeave={() => setHoveredCard(null)}
               >
-                <Link to={`/services/${service.slug}`}> {/* ✅ Link to individual page */}
+                <Link to={`/services/${service.slug}`}>
                   <div className="relative h-64 overflow-hidden">
                     <img
                       src={service.image || "/placeholder.svg"}
@@ -129,7 +129,7 @@ return (
             ))}
           </div>
 
-          {/* ✅ New: View All Button */}
+      
           {services.length > 0 && (
             <div className="text-center mt-12">
               <Link to="/services">

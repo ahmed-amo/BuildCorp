@@ -13,10 +13,13 @@ import ServicesDashboard from "../src/assets/dashboard/services/page";
 import ProjectsDashboard from "../src/assets/dashboard/projects/page";
 import RequireAuth from "../src/context/RequireAuth";
 import "./assets/global.css";
+import {ScrollToTop} from "../layouts/ScrollToTop";
+import ProjectDetailPage from "../pages/projectDetail";
 
 function App() {
   return (
     <BrowserRouter>
+    <ScrollToTop />
       <Routes>
         {/* Public Routes with AppLayout */}
         <Route element={<AppLayout />}>
@@ -27,6 +30,7 @@ function App() {
           <Route path="/services" element={<Services />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/services/:slug" element={<ServiceDetailPage />} />
+          <Route path="/projects/:slug" element={<ProjectDetailPage />} />
         </Route>
 
         {/* Login Route (no layout) */}
