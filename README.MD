@@ -1,6 +1,4 @@
-<p align="center">
-  <h1>🪖 BuildCorp</h1>
-</p>
+
 
 <h1 align="center">BuildCorp — Construction Services Showcase</h1>
 
@@ -9,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="/screens/1.png>
+  <img src="https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white"/>
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black"/>
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>
   <img src="https://img.shields.io/badge/Axios-1-5A29E4?style=for-the-badge&logo=axios&logoColor=white"/>
@@ -21,16 +19,16 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="public/screens/1.png" width="49%"/>
-  <img src="public/screens/2.png" width="49%"/>
+  <img src="/screens/1.png" width="49%"/>
+  <img src="/screens/2.png" width="49%"/>
 </p>
 <p align="center">
-  <img src="public/screens/3.png" width="49%"/>
-  <img src="public/screens/4.png" width="49%"/>
+  <img src="/screens/3.png" width="49%"/>
+  <img src="/screens/4.png" width="49%"/>
 </p>
 <p align="center">
-  <img src="public/screens/5.png" width="49%"/>
-  <img src="public/screens/6.png" width="49%"/>
+  <img src="/screens/5.png" width="49%"/>
+  <img src="/screens/6.png" width="49%"/>
 </p>
 
 ---
